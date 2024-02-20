@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BoAtTask1</string>
+    <string name="start_listening_btn">Start listening</string>
+    <string name="stop_listening_btn">Stop listening</string>
+</resources>

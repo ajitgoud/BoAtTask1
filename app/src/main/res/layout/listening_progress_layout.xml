@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.boattask1.dks.view.progress.DksProgressView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:pvBackgroundColor="@android:color/black"
+    app:pvBackgroundAlpha="0.8"
+    app:pvMessageColor="@android:color/white"
+    app:pvPositiveButtonTextColor="@android:color/white"
+    app:pvPositiveButtonCornerRadius="20"
+    app:pvPositiveButtonHeight="150"
+    app:pvNeutralButtonTextColor="@android:color/white"
+    app:pvNeutralButtonCornerRadius="20"
+    app:pvNeutralButtonHeight="150"
+    app:pvNegativeButtonTextColor="@android:color/white"
+    app:pvNegativeButtonCornerRadius="20"
+    app:pvNegativeButtonHeight="150"/>
