@@ -74,6 +74,8 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
     }
 
     private fun stopListening() {
+        binding.progressBar.visibility = View.GONE
+        binding.errorTextView.visibility = View.GONE
         speechRecognizer!!.stopListening()
     }
 
@@ -138,7 +140,9 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
 
     private fun startListening() {
         speechRecognizer!!.startListening(recognizerIntent)
-        binding.progressBar1.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
+        binding.errorTextView.text = ""
+        binding.errorTextView.visibility = View.VISIBLE
     }
 
 
@@ -179,8 +183,8 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
 
     private val mRecognitionListener = object : RecognitionListener {
         override fun onBeginningOfSpeech() {
-            binding.progressBar1.isIndeterminate = false
-            binding.progressBar1.max = 10
+            binding.progressBar.isIndeterminate = false
+            binding.progressBar.max = 10
         }
 
         override fun onBufferReceived(buffer: ByteArray) {
@@ -188,7 +192,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         }
 
         override fun onEndOfSpeech() {
-            binding.progressBar1.isIndeterminate = true
+            binding.progressBar.isIndeterminate = true
             speechRecognizer!!.stopListening()
         }
 
@@ -201,22 +205,24 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
      $result
      
      """.trimIndent()
-            binding.textView1.text = text
+            binding.speechTextView.text = text
             if (IS_CONTINUES_LISTEN && isPressedStart) {
                 startListening()
             } else {
-                binding.progressBar1.visibility = View.GONE
+                binding.progressBar.visibility = View.GONE
             }
         }
 
         override fun onError(errorCode: Int) {
             val errorMessage = getErrorText(errorCode)
             Log.d(TAG, "FAILED $errorMessage")
-            binding.tvError.text = errorMessage
+            binding.errorTextView.text = errorMessage
 
             // rest voice recogniser
             resetSpeechRecognizer()
-            startListening()
+            if(isPressedStart){
+                startListening()
+            }
         }
 
         override fun onEvent(arg0: Int, arg1: Bundle) {
@@ -232,7 +238,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         }
 
         override fun onRmsChanged(rmsdB: Float) {
-            binding.progressBar1.progress = rmsdB.toInt()
+            binding.progressBar.progress = rmsdB.toInt()
         }
     }
 
