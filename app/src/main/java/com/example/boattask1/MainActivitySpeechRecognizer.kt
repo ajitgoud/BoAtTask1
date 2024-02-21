@@ -31,7 +31,7 @@ private const val TAG = "MainActivitySpeechRecognizer"
 class MainActivitySpeechRecognizer : AppCompatActivity() {
 
 
-    private var  isPressedStart=false
+    private var isPressedStart = false
 
     private val binding by lazy {
         SpeechActivityMainBinding.inflate(layoutInflater)
@@ -52,7 +52,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         checkPermissions()
         resetSpeechRecognizer()
         setRecogniserIntent()
-        prepareLocales()
+//        prepareLocales()
 
 
     }
@@ -67,7 +67,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
                 binding.toggleSpeechListenerBtn.text = getString(R.string.stop_listening_btn)
             } else {
                 binding.toggleSpeechListenerBtn.text = getString(R.string.start_listening_btn)
-                isPressedStart=false
+                isPressedStart = false
                 stopListening()
             }
         }
@@ -107,20 +107,22 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
     }
 
     private fun setRecogniserIntent() {
-        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        recognizerIntent!!.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
-            selectedLanguage
-        )
-        recognizerIntent!!.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE,
-            selectedLanguage
-        )
-        recognizerIntent!!.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        )
-        recognizerIntent!!.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, RESULTS_LIMIT)
+        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+                selectedLanguage
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                selectedLanguage
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, RESULTS_LIMIT)
+        }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -167,7 +169,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
     }
 
 
-    private fun prepareLocales() {
+   /* private fun prepareLocales() {
         val availableLocales =
             Locale.getAvailableLocales() //Alternatively you can check https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
 
@@ -179,7 +181,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         adapterLocalization.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
 
-    }
+    }*/
 
     private val mRecognitionListener = object : RecognitionListener {
         override fun onBeginningOfSpeech() {
@@ -203,7 +205,6 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
             var text = ""
             for (result in matches!!) text += """
      $result
-     
      """.trimIndent()
             binding.speechTextView.text = text
             if (IS_CONTINUES_LISTEN && isPressedStart) {
@@ -220,7 +221,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
 
             // rest voice recogniser
             resetSpeechRecognizer()
-            if(isPressedStart){
+            if (isPressedStart) {
                 startListening()
             }
         }
