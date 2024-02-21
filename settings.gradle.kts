@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 rootProject.name = "BoAtTask1"
 include(":app")
 include(":dks")
+include(":vosk_models")

@@ -8,6 +8,9 @@
       <entry key="dks">
         <State />
       </entry>
+      <entry key="vosk_models">
+        <State />
+      </entry>
     </value>
   </component>
 </project>
