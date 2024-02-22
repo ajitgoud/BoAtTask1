@@ -11,7 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.boattask1.databinding.ActivityVospBinding
+import com.example.boattask1.utils.ACCEPT_CALL_COMMAND
+import com.example.boattask1.utils.REJECT_CALL_COMMAND
 import com.example.boattask1.utils.matchCommand
+import org.json.JSONException
+import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
@@ -127,7 +131,9 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun startListening() {
-        val rec = Recognizer(model, 16000.0f)
+        val keywords = arrayOf(ACCEPT_CALL_COMMAND, REJECT_CALL_COMMAND)
+        val wordList = "[" + keywords.joinToString(",") { "\"$it\"" } + "]"
+        val rec = Recognizer(model, 16000.0f, wordList)
         speechService = SpeechService(rec, 16000.0f)
         speechService!!.startListening(this)
     }
@@ -136,6 +142,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         StorageService.unpack(this, "model-en-us", "model",
             {
                 model = it
+                binding.toggleSpeechListenerBtn.isEnabled=true
             }
         ) { exception: IOException ->
             Toast.makeText(this, "Failed to unpack model", Toast.LENGTH_SHORT).show()
@@ -160,16 +167,20 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         val rawCommand = hypothesis ?: ""
 
         Log.d(TAG, "onResult: $rawCommand")
-        if (rawCommand.isNotEmpty()) {
-            val index = rawCommand.indexOf(":")
-            var command = rawCommand.substring(index + 1).trim()
-            command = command.trim('"', '{', '}')
-            if (command.length > 1) {
-                command = command.substring(0, command.length - 2)
-                binding.speechTextView.text = command
-                matchCommand(command)
+        try {
+
+            if (rawCommand.isNotEmpty()) {
+                val jsonObject = JSONObject(rawCommand);
+                if (jsonObject.has("text")) {
+                    val command = jsonObject.getString("text")
+                    binding.speechTextView.text = command
+                    matchCommand(command)
+                }
+
             }
+        } catch (_: JSONException) {
         }
+
     }
 
     override fun onFinalResult(hypothesis: String?) {

@@ -11,8 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 
 
-private const val ACCEPT_CALL_COMMAND = "accept"
-private const val REJECT_CALL_COMMAND = "reject"
+ const val ACCEPT_CALL_COMMAND = "accept"
+ const val REJECT_CALL_COMMAND = "reject"
 private const val ACCEPT_RINGING_CALL_METHOD_NAME = "acceptRingingCall"
 private const val END_CALL_METHOD_NAME = "endCall"
 private const val TAG = "CallUtils"

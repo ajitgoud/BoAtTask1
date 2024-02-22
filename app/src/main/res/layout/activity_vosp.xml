@@ -18,6 +18,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/toggleSpeechListenerBtn"
         android:layout_width="wrap_content"
+        android:enabled="false"
         android:layout_height="wrap_content"
         android:text="@string/start_listening_btn" />
 
