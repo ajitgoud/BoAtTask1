@@ -1,10 +1,12 @@
 package com.example.boattask1
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
@@ -25,6 +27,8 @@ import java.io.IOException
 private const val TAG = "VospActivity"
 private const val ACCEPT_CALL_COMMAND = "accept the call"
 private const val REJECT_CALL_COMMAND = "reject the call"
+private const val ACCEPT_RINGING_CALL_METHOD_NAME = "acceptRingingCall"
+private const val END_CALL_METHOD_NAME = "endCall"
 
 private const val PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE = 100
 
@@ -35,7 +39,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     private var speechService: SpeechService? = null
     private var speechStreamService: SpeechStreamService? = null
     private lateinit var telecomManager: TelecomManager
-
+    private lateinit var telephonyManager: TelephonyManager
     private val binding by lazy {
         ActivityVospBinding.inflate(layoutInflater)
     }
@@ -44,11 +48,13 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
+        telephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         initModel()
         checkPermissions()
         setListeners()
 
     }
+
 
     private fun setListeners() {
         binding.toggleSpeechListenerBtn.setOnClickListener {
@@ -156,9 +162,36 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         speechStreamService?.stop()
     }
 
-    @RequiresApi(Build.VERSION_CODES.P)
+    private fun invokeCallActionMethods(methodName: String) {
+        try {
+            val c = Class.forName(telephonyManager.javaClass.name)
+            val m = c.getDeclaredMethod("getITelephony")
+            m.isAccessible = true
+            val telephonyService = m.invoke(telephonyManager)
+
+            val cls = Class.forName(telephonyService.javaClass.name)
+            val method = cls.getDeclaredMethod(methodName)
+            
+            method.isAccessible = true
+            method.invoke(telephonyService)
+        } catch (e: Exception) {
+            Log.e(TAG, "invokeCallActionMethods: ${e.localizedMessage}")
+        }
+    }
+
+    private fun acceptTheCall() {
+        invokeCallActionMethods(ACCEPT_RINGING_CALL_METHOD_NAME)
+
+    }
+
+    private fun rejectTheCall() {
+
+        invokeCallActionMethods(END_CALL_METHOD_NAME)
+
+    }
+
     private fun matchCommand(command: String) {
-        if(command.equals(ACCEPT_CALL_COMMAND, ignoreCase = true)){
+        if (command.equals(ACCEPT_CALL_COMMAND, ignoreCase = true)) {
             if (ActivityCompat.checkSelfPermission(
                     this,
                     Manifest.permission.ANSWER_PHONE_CALLS
@@ -169,9 +202,11 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 telecomManager.acceptRingingCall()
+            } else {
+                acceptTheCall()
             }
         }
-        if(command.equals(REJECT_CALL_COMMAND, ignoreCase = true)){
+        if (command.equals(REJECT_CALL_COMMAND, ignoreCase = true)) {
             if (ActivityCompat.checkSelfPermission(
                     this,
                     Manifest.permission.ANSWER_PHONE_CALLS
@@ -182,6 +217,8 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 telecomManager.endCall()
+            } else {
+                rejectTheCall()
             }
         }
     }
@@ -198,13 +235,13 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
             val index = rawCommand.indexOf(":")
             var command = rawCommand.substring(index + 1).trim()
             command = command.trim('"', '{', '}')
-           if(command.length>1){
-               command = command.substring(0, command.length-2)
-               binding.speechTextView.text = command
-               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                   matchCommand(command)
-               }
-           }
+            if (command.length > 1) {
+                command = command.substring(0, command.length - 2)
+                binding.speechTextView.text = command
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    matchCommand(command)
+                }
+            }
         }
     }
 
