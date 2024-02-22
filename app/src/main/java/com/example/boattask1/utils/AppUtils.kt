@@ -25,3 +25,4 @@ fun getErrorText(errorCode: Int): String {
     }
     return message
 }
+

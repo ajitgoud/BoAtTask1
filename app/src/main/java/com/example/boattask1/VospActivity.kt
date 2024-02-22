@@ -10,11 +10,11 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.boattask1.databinding.ActivityVospBinding
+import com.example.boattask1.utils.matchCommand
 import org.vosk.Model
 import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
@@ -25,10 +25,6 @@ import java.io.IOException
 
 
 private const val TAG = "VospActivity"
-private const val ACCEPT_CALL_COMMAND = "accept the call"
-private const val REJECT_CALL_COMMAND = "reject the call"
-private const val ACCEPT_RINGING_CALL_METHOD_NAME = "acceptRingingCall"
-private const val END_CALL_METHOD_NAME = "endCall"
 
 private const val PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE = 100
 
@@ -38,8 +34,6 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     private var model: Model? = null
     private var speechService: SpeechService? = null
     private var speechStreamService: SpeechStreamService? = null
-    private lateinit var telecomManager: TelecomManager
-    private lateinit var telephonyManager: TelephonyManager
     private val binding by lazy {
         ActivityVospBinding.inflate(layoutInflater)
     }
@@ -47,8 +41,6 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        telecomManager = getSystemService(TELECOM_SERVICE) as TelecomManager
-        telephonyManager = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         initModel()
         checkPermissions()
         setListeners()
@@ -92,7 +84,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         val audioPermissionCheck =
             ContextCompat.checkSelfPermission(
                 applicationContext,
-                android.Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO
             )
 
         val permissionList = mutableListOf<String>()
@@ -101,15 +93,15 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val phoneStatePermissionCheck = ContextCompat.checkSelfPermission(
                 applicationContext,
-                android.Manifest.permission.ANSWER_PHONE_CALLS
+                Manifest.permission.ANSWER_PHONE_CALLS
             )
 
             if (phoneStatePermissionCheck != PackageManager.PERMISSION_GRANTED) {
-                permissionList.add(android.Manifest.permission.ANSWER_PHONE_CALLS)
+                permissionList.add(Manifest.permission.ANSWER_PHONE_CALLS)
             }
         }
         if (audioPermissionCheck != PackageManager.PERMISSION_GRANTED) {
-            permissionList.add(android.Manifest.permission.RECORD_AUDIO)
+            permissionList.add(Manifest.permission.RECORD_AUDIO)
         }
 
         if (permissionList.size > 0) {
@@ -127,7 +119,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         val permissionCheck =
             ContextCompat.checkSelfPermission(
                 applicationContext,
-                android.Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO
             )
         return permissionCheck == PackageManager.PERMISSION_GRANTED
     }
@@ -162,66 +154,6 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         speechStreamService?.stop()
     }
 
-    private fun invokeCallActionMethods(methodName: String) {
-        try {
-            val c = Class.forName(telephonyManager.javaClass.name)
-            val m = c.getDeclaredMethod("getITelephony")
-            m.isAccessible = true
-            val telephonyService = m.invoke(telephonyManager)
-
-            val cls = Class.forName(telephonyService.javaClass.name)
-            val method = cls.getDeclaredMethod(methodName)
-            
-            method.isAccessible = true
-            method.invoke(telephonyService)
-        } catch (e: Exception) {
-            Log.e(TAG, "invokeCallActionMethods: ${e.localizedMessage}")
-        }
-    }
-
-    private fun acceptTheCall() {
-        invokeCallActionMethods(ACCEPT_RINGING_CALL_METHOD_NAME)
-
-    }
-
-    private fun rejectTheCall() {
-
-        invokeCallActionMethods(END_CALL_METHOD_NAME)
-
-    }
-
-    private fun matchCommand(command: String) {
-        if (command.equals(ACCEPT_CALL_COMMAND, ignoreCase = true)) {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ANSWER_PHONE_CALLS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-
-                return
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                telecomManager.acceptRingingCall()
-            } else {
-                acceptTheCall()
-            }
-        }
-        if (command.equals(REJECT_CALL_COMMAND, ignoreCase = true)) {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ANSWER_PHONE_CALLS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-
-                return
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                telecomManager.endCall()
-            } else {
-                rejectTheCall()
-            }
-        }
-    }
 
     override fun onPartialResult(hypothesis: String?) {
         Log.d(TAG, "onPartialResult: $hypothesis")
@@ -238,16 +170,12 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
             if (command.length > 1) {
                 command = command.substring(0, command.length - 2)
                 binding.speechTextView.text = command
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    matchCommand(command)
-                }
+                matchCommand(command)
             }
         }
     }
 
     override fun onFinalResult(hypothesis: String?) {
-//        binding.speechTextView.text = hypothesis ?: ""
-
         Log.d(TAG, "onFinalResult: $hypothesis")
     }
 

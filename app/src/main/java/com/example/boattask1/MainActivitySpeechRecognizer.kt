@@ -1,32 +1,29 @@
 package com.example.boattask1
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.boattask1.databinding.ActivityMainBinding
 import com.example.boattask1.databinding.SpeechActivityMainBinding
-import com.example.boattask1.dks.speech.Dks
-import com.example.boattask1.dks.speech.DksListener
 import com.example.boattask1.utils.IS_CONTINUES_LISTEN
-import com.example.boattask1.utils.PERMISSIONS_REQUEST_RECORD_AUDIO
 import com.example.boattask1.utils.RESULTS_LIMIT
 import com.example.boattask1.utils.getErrorText
-import com.google.android.material.button.MaterialButton
-import java.util.Locale
+import com.example.boattask1.utils.matchCommand
 
 private const val TAG = "MainActivitySpeechRecognizer"
+
+private const val PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE = 100
 
 class MainActivitySpeechRecognizer : AppCompatActivity() {
 
@@ -52,7 +49,6 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         checkPermissions()
         resetSpeechRecognizer()
         setRecogniserIntent()
-//        prepareLocales()
 
 
     }
@@ -80,16 +76,34 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
     }
 
     private fun checkPermissions() {
-        val permissionCheck =
+        val audioPermissionCheck =
             ContextCompat.checkSelfPermission(
                 applicationContext,
-                android.Manifest.permission.RECORD_AUDIO
+                Manifest.permission.RECORD_AUDIO
             )
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+
+        val permissionList = mutableListOf<String>()
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val phoneStatePermissionCheck = ContextCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.ANSWER_PHONE_CALLS
+            )
+
+            if (phoneStatePermissionCheck != PackageManager.PERMISSION_GRANTED) {
+                permissionList.add(Manifest.permission.ANSWER_PHONE_CALLS)
+            }
+        }
+        if (audioPermissionCheck != PackageManager.PERMISSION_GRANTED) {
+            permissionList.add(Manifest.permission.RECORD_AUDIO)
+        }
+
+        if (permissionList.size > 0) {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(android.Manifest.permission.RECORD_AUDIO),
-                PERMISSIONS_REQUEST_RECORD_AUDIO
+                permissionList.toTypedArray(),
+                PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE
             )
             return
         }
@@ -130,7 +144,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
         permissions: Array<String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO) {
+        if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startListening()
             } else {
@@ -169,20 +183,6 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
     }
 
 
-   /* private fun prepareLocales() {
-        val availableLocales =
-            Locale.getAvailableLocales() //Alternatively you can check https://cloud.google.com/speech-to-text/docs/speech-to-text-supported-languages
-
-        val adapterLocalization: ArrayAdapter<Any?> = ArrayAdapter<Any?>(
-            this,
-            android.R.layout.simple_spinner_item,
-            availableLocales
-        )
-        adapterLocalization.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
-
-    }*/
-
     private val mRecognitionListener = object : RecognitionListener {
         override fun onBeginningOfSpeech() {
             binding.progressBar.isIndeterminate = false
@@ -207,6 +207,7 @@ class MainActivitySpeechRecognizer : AppCompatActivity() {
      $result
      """.trimIndent()
             binding.speechTextView.text = text
+            matchCommand(text)
             if (IS_CONTINUES_LISTEN && isPressedStart) {
                 startListening()
             } else {
