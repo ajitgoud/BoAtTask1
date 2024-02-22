@@ -1,12 +1,9 @@
 package com.example.boattask1
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.telecom.TelecomManager
-import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast

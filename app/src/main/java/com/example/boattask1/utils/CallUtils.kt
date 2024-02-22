@@ -11,8 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 
 
-private const val ACCEPT_CALL_COMMAND = "accept the call"
-private const val REJECT_CALL_COMMAND = "reject the call"
+private const val ACCEPT_CALL_COMMAND = "accept"
+private const val REJECT_CALL_COMMAND = "reject"
 private const val ACCEPT_RINGING_CALL_METHOD_NAME = "acceptRingingCall"
 private const val END_CALL_METHOD_NAME = "endCall"
 private const val TAG = "CallUtils"
@@ -25,8 +25,7 @@ fun Activity.matchCommand(
     val telephonyManager = getSystemService(AppCompatActivity.TELEPHONY_SERVICE) as TelephonyManager
     if (command.equals(ACCEPT_CALL_COMMAND, ignoreCase = true)) {
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ANSWER_PHONE_CALLS
+                this, Manifest.permission.ANSWER_PHONE_CALLS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
 
@@ -40,8 +39,7 @@ fun Activity.matchCommand(
     }
     if (command.equals(REJECT_CALL_COMMAND, ignoreCase = true)) {
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ANSWER_PHONE_CALLS
+                this, Manifest.permission.ANSWER_PHONE_CALLS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
 
@@ -75,11 +73,8 @@ private fun invokeCallActionMethods(telephonyManager: TelephonyManager, methodNa
 
 private fun acceptTheCall(telephonyManager: TelephonyManager) {
     invokeCallActionMethods(telephonyManager, ACCEPT_RINGING_CALL_METHOD_NAME)
-
 }
 
 private fun rejectTheCall(telephonyManager: TelephonyManager) {
-
     invokeCallActionMethods(telephonyManager, END_CALL_METHOD_NAME)
-
 }
