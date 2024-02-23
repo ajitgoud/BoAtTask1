@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
@@ -12,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.boattask1.databinding.ActivityVospBinding
 import com.example.boattask1.utils.ACCEPT_CALL_COMMAND
+import com.example.boattask1.utils.CONFUSING_COMMAND_ARRAY
 import com.example.boattask1.utils.REJECT_CALL_COMMAND
 import com.example.boattask1.utils.matchCommand
 import org.json.JSONException
@@ -26,6 +28,7 @@ import java.io.IOException
 
 
 private const val TAG = "VospActivity"
+private const val VOSK_SPEECH_SAMPLE_RATE = 20000.0f
 
 private const val PERMISSIONS_REQUEST_RECORD_AUDIO_ANSWER_PHONE = 100
 
@@ -42,10 +45,19 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        checkForSpeechRecognition()
         initModel()
         checkPermissions()
         setListeners()
 
+    }
+
+    private fun checkForSpeechRecognition() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, "Speech Recognition not available", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
 
@@ -131,10 +143,15 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun startListening() {
-        val keywords = arrayOf(ACCEPT_CALL_COMMAND, REJECT_CALL_COMMAND)
+        val keywords = arrayOf(
+            CONFUSING_COMMAND_ARRAY.joinToString(","),
+            ACCEPT_CALL_COMMAND,
+            REJECT_CALL_COMMAND
+        )
         val wordList = "[" + keywords.joinToString(",") { "\"$it\"" } + "]"
-        val rec = Recognizer(model, 16000.0f, wordList)
-        speechService = SpeechService(rec, 16000.0f)
+        val rec = Recognizer(model, VOSK_SPEECH_SAMPLE_RATE, wordList)
+
+        speechService = SpeechService(rec, VOSK_SPEECH_SAMPLE_RATE)
         speechService!!.startListening(this)
     }
 
@@ -142,7 +159,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
         StorageService.unpack(this, "model-en-us", "model",
             {
                 model = it
-                binding.toggleSpeechListenerBtn.isEnabled=true
+                binding.toggleSpeechListenerBtn.isEnabled = true
             }
         ) { exception: IOException ->
             Toast.makeText(this, "Failed to unpack model", Toast.LENGTH_SHORT).show()
@@ -160,7 +177,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
 
 
     override fun onPartialResult(hypothesis: String?) {
-        Log.d(TAG, "onPartialResult: $hypothesis")
+//        Log.d(TAG, "onPartialResult: $hypothesis")
     }
 
     override fun onResult(hypothesis: String?) {
@@ -184,7 +201,7 @@ class VospActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onFinalResult(hypothesis: String?) {
-        Log.d(TAG, "onFinalResult: $hypothesis")
+//        Log.d(TAG, "onFinalResult: $hypothesis")
     }
 
     override fun onError(exception: Exception?) {
